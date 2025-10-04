@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Video Downloader</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body { font-family: system-ui, Arial; padding: 2rem; max-width: 800px; margin: auto; }
+    input, button { padding: .6rem; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Video Downloader</h1>
+  <p>Paste a YouTube / Facebook URL you own or have permission to download.</p>
+
+  <input id="url" placeholder="https://..." style="width:70%"/>
+  <input id="title" placeholder="Optional filename" style="width:25%" />
+  <br/><br/>
+  <button id="download">Download</button>
+  <p id="status"></p>
+
+<script>
+const BACKEND = (window.__BACKEND_URL__ || "https://REPLACE_BACKEND_URL"); // replace or inject at build
+const API_KEY = (window.__API_KEY__ || "REPLACE_API_KEY"); // inject via environment on Vercel
+
+async function downloadVideo() {
+  const url = document.getElementById('url').value.trim();
+  const title = document.getElementById('title').value.trim();
+  if (!url) return alert('Paste a URL');
+
+  document.getElementById('status').innerText = 'Preparing download...';
+
+  try {
+    const params = new URLSearchParams({ url });
+    if (title) params.append('title', title);
+    const res = await fetch(`${BACKEND}/download?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + API_KEY }
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(()=>({detail: res.statusText}));
+      throw new Error(err.detail || res.statusText || 'Download failed');
+    }
+
+    const disposition = res.headers.get('Content-Disposition') || 'video.mp4';
+    const blob = await res.blob();
+    const urlBlob = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = urlBlob;
+    // attempt to extract filename
+    const match = /filename="?([^"]+)"?/.exec(disposition);
+    a.download = match ? match[1] : 'video.mp4';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(urlBlob);
+    document.getElementById('status').innerText = 'Download started.';
+  } catch (e) {
+    document.getElementById('status').innerText = 'Error: ' + e.message;
+  }
+}
+
+document.getElementById('download').addEventListener('click', downloadVideo);
+</script>
+</body>
+</html>
