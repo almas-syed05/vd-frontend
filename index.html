@@ -6,26 +6,49 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body { font-family: system-ui, Arial; padding: 2rem; max-width: 800px; margin: auto; }
-    input, button { padding: .6rem; font-size: 1rem; margin-bottom: .5rem; }
+    input, button, select { padding: .6rem; font-size: 1rem; margin-bottom: .5rem; }
     #status { margin-top: 1rem; font-weight: bold; }
-    .hint { font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
+    .hint { color: #555; font-size: .9rem; margin-top: .25rem; }
+    .error { color: #b00020; }
+    .success { color: #0a7d00; }
+    .form-row { display: flex; gap: 0.5rem; align-items: flex-start; flex-wrap: wrap; }
+    .form-row > * { flex: 1; min-width: 200px; }
+    .quality-select { flex: 0 0 120px; }
+    .download-btn { flex: 0 0 100px; }
   </style>
 </head>
 <body>
   <h1>Video Downloader</h1>
-  <p>Paste a YouTube / Facebook URL you own or have permission to download.</p>
+  <p>Paste a YouTube URL you own or have permission to download.</p>
 
-  <input id="url" placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID" style="width:70%" pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.*" title="Enter a valid YouTube URL (youtube.com or youtu.be)" required />
-  <div class="hint">Only YouTube URLs are supported.</div>
-  <input id="title" placeholder="Optional filename" style="width:25%" />
-  <br/>
-  <button id="download">Download</button>
+  <div class="form-row">
+    <input
+      id="url"
+      placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID"
+      pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.*"
+      title="Enter a valid YouTube URL (youtube.com or youtu.be)"
+      required
+    />
+    <select id="quality" class="quality-select" title="Video quality">
+      <option value="144p">144p</option>
+      <option value="240p">240p</option>
+      <option value="360p">360p</option>
+      <option value="480p">480p</option>
+      <option value="720p" selected>720p</option>
+      <option value="1080p">1080p</option>
+      <option value="best">Best</option>
+    </select>
+    <button id="download" class="download-btn">Download</button>
+  </div>
+  
+  <div class="hint">Only YouTube URLs are supported. Choose your preferred quality.</div>
+  <p id="status"></p>
+
   <script>
-    // Try multiple backend servers in order; stop on first success
+    // Try Railway first (working), then Render as fallback
     const BACKENDS = [
-      'https://vd-backend-production.up.railway.app/',
-      'https://vd-backend-f1vo.onrender.com',
-      // Add more as you deploy them
+      'https://vd-backend-production.up.railway.app',
+      'https://vd-backend-f1vo.onrender.com'
     ];
     const API_KEY = (window.__API_KEY__ || 'testing123');
 
@@ -34,44 +57,63 @@
       return base.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
     }
 
-    // Ensure there's a status element to write to
     function getStatusEl() {
-      let el = document.getElementById('status');
-      if (!el) {
-        el = document.createElement('p');
-        el.id = 'status';
-        document.body.appendChild(el);
+      return document.getElementById('status');
+    }
+
+    function isYouTubeUrl(u) {
+      try {
+        const parsed = new URL(u);
+        const host = parsed.hostname.toLowerCase();
+        return ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'music.youtube.com'].includes(host);
+      } catch {
+        return false;
       }
-      return el;
     }
 
     async function downloadVideo() {
-      const url = document.getElementById('url').value.trim();
-      const title = document.getElementById('title').value.trim();
-      if (!url) return alert('Paste a URL');
+      const urlInput = document.getElementById('url');
+      const qualitySelect = document.getElementById('quality');
+      const url = urlInput.value.trim();
+      const quality = qualitySelect.value;
+      const statusEl = getStatusEl();
 
-    const statusEl = getStatusEl();
-      statusEl.innerText = 'Trying multiple servers...';
+      // Client-side validation
+      if (!url) {
+        urlInput.focus();
+        statusEl.textContent = 'Please paste a YouTube URL.';
+        statusEl.className = 'error';
+        return;
+      }
+      if (!isYouTubeUrl(url)) {
+        urlInput.focus();
+        statusEl.textContent = 'Only YouTube URLs are supported (youtube.com or youtu.be).';
+        statusEl.className = 'error';
+        return;
+      }
 
-      const params = new URLSearchParams({ url });
-      if (title) params.append('title', title);
+      statusEl.textContent = `Trying multiple servers (${quality})...`;
+      statusEl.className = '';
+
+      const params = new URLSearchParams({ url, quality });
 
       for (let i = 0; i < BACKENDS.length; i++) {
         try {
-          statusEl.innerText = `Trying server ${i + 1}/${BACKENDS.length}...`;
+          statusEl.textContent = `Trying server ${i + 1}/${BACKENDS.length} (${quality})...`;
           const endpoint = joinUrl(BACKENDS[i], 'download') + `?${params.toString()}`;
+
           const res = await fetch(endpoint, {
             method: 'GET',
-            headers: { 'Authorization': 'Bearer ' + API_KEY },
+            headers: { 'Authorization': 'Bearer ' + API_KEY }
           });
 
           if (!res.ok) {
-            // Try to read JSON error but don't fail if not JSON
             const err = await res.json().catch(() => ({ detail: res.statusText }));
             throw new Error(err.detail || res.statusText || 'Download failed');
           }
 
-          statusEl.innerText = `Success with server ${i + 1}!`;
+          statusEl.textContent = `Success with server ${i + 1} (${quality})!`;
+          statusEl.className = 'success';
 
           const disposition = res.headers.get('Content-Disposition') || 'video.mp4';
           const blob = await res.blob();
@@ -79,27 +121,27 @@
 
           const a = document.createElement('a');
           a.href = blobUrl;
-          const match = /filename="?([^\"]+)"?/.exec(disposition);
-          a.download = match ? match[1] : 'video.mp4';
+          const match = /filename="?([^"]+)"?/.exec(disposition);
+          a.download = match ? match[1] : `video_${quality}.mp4`;
 
           document.body.appendChild(a);
           a.click();
           a.remove();
           URL.revokeObjectURL(blobUrl);
-          statusEl.innerText = 'Download started!';
-          return; // success, stop trying more servers
+
+          statusEl.textContent = `Download started (${quality})!`;
+          return; // success
         } catch (e) {
           console.log(`Server ${i + 1} failed:`, e.message);
-          // continue to next server
+          // Try next server
         }
       }
 
-      statusEl.innerText = 'All servers failed. YouTube may be blocking this video.';
+      statusEl.textContent = `All servers failed. YouTube may be blocking this video or ${quality} is not available.`;
+      statusEl.className = 'error';
     }
 
     document.getElementById('download').addEventListener('click', downloadVideo);
   </script>
-  document.getElementById('download').addEventListener('click', downloadVideo);
-</script>
 </body>
 </html>
