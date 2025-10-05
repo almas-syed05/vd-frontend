@@ -5,54 +5,256 @@
   <title>Video Downloader</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: system-ui, Arial; padding: 2rem; max-width: 800px; margin: auto; }
-    input, button, select { padding: .6rem; font-size: 1rem; margin-bottom: .5rem; }
-    #status { margin-top: 1rem; font-weight: bold; }
-    .hint { color: #555; font-size: .9rem; margin-top: .25rem; }
-    .error { color: #b00020; }
-    .success { color: #0a7d00; }
-    .form-row { display: flex; gap: 0.5rem; align-items: flex-start; flex-wrap: wrap; }
-    .form-row > * { flex: 1; min-width: 200px; }
-    .quality-select { flex: 0 0 120px; }
-    .download-btn { flex: 0 0 100px; }
-    .progress-wrap { margin-top: 0.75rem; }
-    .progress-bar { width: 100%; height: 12px; background: #eee; border-radius: 6px; overflow: hidden; }
-    .progress-bar > span { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #4caf50, #2e7d32); transition: width 0.15s ease; }
-    .progress-text { font-size: 0.9rem; color: #333; margin-top: 0.35rem; }
-    footer { margin-top: 3rem; color: #666; font-size: 0.9rem; text-align: center; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2.5rem;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    h1 {
+      color: #2d3748;
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #4a5568;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    input, select, button {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      background: white;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: end;
+    }
+    
+    .quality-select {
+      min-width: 120px;
+    }
+    
+    .download-btn {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 140px;
+    }
+    
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .download-btn:active {
+      transform: translateY(0);
+    }
+    
+    .hint {
+      color: #718096;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+    
+    #status {
+      margin-top: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+      padding: 1rem;
+      border-radius: 12px;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .error {
+      color: #e53e3e;
+      background: rgba(229, 62, 62, 0.1);
+      border: 1px solid rgba(229, 62, 62, 0.2);
+    }
+    
+    .success {
+      color: #38a169;
+      background: rgba(56, 161, 105, 0.1);
+      border: 1px solid rgba(56, 161, 105, 0.2);
+    }
+    
+    .progress-wrap {
+      margin-top: 1.5rem;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .progress-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+      border-radius: 4px;
+    }
+    
+    .progress-text {
+      font-size: 0.9rem;
+      color: #4a5568;
+      margin-top: 0.5rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    footer {
+      margin-top: 3rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+      
+      .container {
+        padding: 1.5rem;
+      }
+      
+      h1 {
+        font-size: 2rem;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    /* Loading animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .loading {
+      animation: pulse 2s infinite;
+    }
   </style>
 </head>
 <body>
-  <h1>Video Downloader</h1>
-  <p>Paste a YouTube or Facebook URL you own or have permission to download.</p>
+  <div class="container">
+    <h1>Video Downloader</h1>
+    <p class="subtitle">Paste a YouTube or Facebook URL you own or have permission to download.</p>
 
-  <div class="form-row">
-    <input
-      id="url"
-      placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID or https://www.facebook.com/..."
-      pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|fb\.watch)\/.*"
-      title="Enter a valid YouTube or Facebook URL"
-      required
-    />
-    <select id="quality" class="quality-select" title="Video quality">
-      <option value="144p">144p</option>
-      <option value="240p">240p</option>
-      <option value="360p">360p</option>
-      <option value="480p">480p</option>
-      <option value="720p" selected>720p</option>
-      <option value="1080p">1080p</option>
-      <option value="best">Best</option>
-    </select>
-    <button id="download" class="download-btn">Download</button>
-  </div>
-  
-  <div class="hint">Only YouTube or Facebook URLs are supported. Choose your preferred quality.</div>
-  <p id="status"></p>
-  <div class="progress-wrap" aria-live="polite">
-    <div class="progress-bar" aria-label="Download progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <span id="progressFill"></span>
+    <div class="form-group">
+      <label for="url">Video URL</label>
+      <input
+        id="url"
+        placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID or https://www.facebook.com/..."
+        pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|fb\.watch)\/.*"
+        title="Enter a valid YouTube or Facebook URL"
+        required
+      />
     </div>
-    <div class="progress-text" id="progressText">Waiting to start…</div>
+    
+    <div class="form-row">
+      <div class="form-group">
+        <label for="quality">Quality</label>
+        <select id="quality" class="quality-select" title="Video quality">
+          <option value="144p">144p</option>
+          <option value="240p">240p</option>
+          <option value="360p">360p</option>
+          <option value="480p">480p</option>
+          <option value="720p" selected>720p</option>
+          <option value="1080p">1080p</option>
+          <option value="best">Best</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>&nbsp;</label>
+        <button id="download" class="download-btn">Download</button>
+      </div>
+    </div>
+    
+    <div class="hint">Only YouTube or Facebook URLs are supported. Choose your preferred quality.</div>
+    <p id="status"></p>
+    <div class="progress-wrap" aria-live="polite">
+      <div class="progress-bar" aria-label="Download progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="progressFill"></span>
+      </div>
+      <div class="progress-text" id="progressText">Waiting to start…</div>
+    </div>
   </div>
 
   <script>
@@ -159,16 +361,15 @@
         return;
       }
 
-  // Reset progress UI
-  setProgress(0, 'Waiting for server…');
-  statusEl.textContent = `Trying multiple servers (${quality})...`;
-      statusEl.className = '';
-
-      const params = new URLSearchParams({ url, quality });
+      // Reset progress UI
+      setProgress(0, 'Waiting for server…');
+      statusEl.textContent = `Trying multiple servers (${quality})...`;
+      statusEl.className = 'loading';      const params = new URLSearchParams({ url, quality });
 
       for (let i = 0; i < BACKENDS.length; i++) {
         try {
           statusEl.textContent = `Trying server ${i + 1}/${BACKENDS.length} (${quality})...`;
+          statusEl.className = 'loading';
           const endpoint = joinUrl(BACKENDS[i], 'download') + `?${params.toString()}`;
 
           const res = await fetch(endpoint, {
@@ -216,7 +417,7 @@
     document.getElementById('download').addEventListener('click', downloadVideo);
   </script>
   <footer>
-    Made by Almas
+    <p>Made with ❤️ by Almas</p>
   </footer>
 </body>
 </html>
