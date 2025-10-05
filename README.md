@@ -14,7 +14,7 @@ A modern, beautiful web application for downloading videos from YouTube and Face
 
 ## 🚀 Live Demo
 
-Visit the live application: [Video Downloader](https://your-vercel-url.vercel.app)
+Visit the live application: [Video Downloader](https://vd-frontend-beige.vercel.app/)
 
 ## 🛠 Tech Stack
 
@@ -22,15 +22,6 @@ Visit the live application: [Video Downloader](https://your-vercel-url.vercel.ap
 - **Styling**: Modern CSS with gradients, backdrop filters, and animations
 - **Backend APIs**: Railway & Render hosted download services
 - **Deployment**: Vercel (static hosting)
-
-## 📱 Screenshots
-
-### Desktop View
-![Desktop Screenshot](screenshots/desktop.png)
-
-### Mobile View
-![Mobile Screenshot](screenshots/mobile.png)
-
 ## 🎯 How to Use
 
 1. **Paste URL**: Enter a YouTube or Facebook video URL
@@ -190,7 +181,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Almas Syed**
 - GitHub: [@almas-syed05](https://github.com/almas-syed05)
-- Portfolio: [your-portfolio.com](https://your-portfolio.com)
+- Portfolio: [your-portfolio.com](https://almassyed-portfolio.netlify.app/)
 
 ## 🙏 Acknowledgments
 
