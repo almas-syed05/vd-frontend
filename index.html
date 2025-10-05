@@ -307,6 +307,8 @@
       
       return `video_${quality}.mp4`;
     }
+
+    function isSupportedUrl(u) {
       try {
         const parsed = new URL(u);
         const host = parsed.hostname.toLowerCase();
