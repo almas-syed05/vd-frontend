@@ -32,12 +32,23 @@
       return base.replace(/\/$/, '') + '/' + path.replace(/^\//, '');
     }
 
+    // Ensure there's a status element to write to
+    function getStatusEl() {
+      let el = document.getElementById('status');
+      if (!el) {
+        el = document.createElement('p');
+        el.id = 'status';
+        document.body.appendChild(el);
+      }
+      return el;
+    }
+
     async function downloadVideo() {
       const url = document.getElementById('url').value.trim();
       const title = document.getElementById('title').value.trim();
       if (!url) return alert('Paste a URL');
 
-      const statusEl = document.getElementById('status');
+    const statusEl = getStatusEl();
       statusEl.innerText = 'Trying multiple servers...';
 
       const params = new URLSearchParams({ url });
