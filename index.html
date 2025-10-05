@@ -24,14 +24,14 @@
 </head>
 <body>
   <h1>Video Downloader</h1>
-  <p>Paste a YouTube URL you own or have permission to download.</p>
+  <p>Paste a YouTube or Facebook URL you own or have permission to download.</p>
 
   <div class="form-row">
     <input
       id="url"
-      placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID"
-      pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.*"
-      title="Enter a valid YouTube URL (youtube.com or youtu.be)"
+      placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID or https://www.facebook.com/..."
+      pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|facebook\.com|fb\.com|fb\.watch)\/.*"
+      title="Enter a valid YouTube or Facebook URL"
       required
     />
     <select id="quality" class="quality-select" title="Video quality">
@@ -46,7 +46,7 @@
     <button id="download" class="download-btn">Download</button>
   </div>
   
-  <div class="hint">Only YouTube URLs are supported. Choose your preferred quality.</div>
+  <div class="hint">Only YouTube or Facebook URLs are supported. Choose your preferred quality.</div>
   <p id="status"></p>
   <div class="progress-wrap" aria-live="polite">
     <div class="progress-bar" aria-label="Download progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
@@ -72,11 +72,16 @@
       return document.getElementById('status');
     }
 
-    function isYouTubeUrl(u) {
+    function isSupportedUrl(u) {
       try {
         const parsed = new URL(u);
         const host = parsed.hostname.toLowerCase();
-        return ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'music.youtube.com'].includes(host);
+        return [
+          // YouTube
+          'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be', 'music.youtube.com',
+          // Facebook
+          'facebook.com', 'www.facebook.com', 'm.facebook.com', 'web.facebook.com', 'fb.watch', 'fb.com'
+        ].includes(host);
       } catch {
         return false;
       }
@@ -143,13 +148,13 @@
       // Client-side validation
       if (!url) {
         urlInput.focus();
-        statusEl.textContent = 'Please paste a YouTube URL.';
+        statusEl.textContent = 'Please paste a YouTube or Facebook URL.';
         statusEl.className = 'error';
         return;
       }
-      if (!isYouTubeUrl(url)) {
+      if (!isSupportedUrl(url)) {
         urlInput.focus();
-        statusEl.textContent = 'Only YouTube URLs are supported (youtube.com or youtu.be).';
+        statusEl.textContent = 'Only YouTube or Facebook URLs are supported.';
         statusEl.className = 'error';
         return;
       }
@@ -203,7 +208,7 @@
         }
       }
 
-      statusEl.textContent = `All servers failed. YouTube may be blocking this video or ${quality} is not available.`;
+      statusEl.textContent = `All servers failed. The platform may be blocking this video or ${quality} is not available.`;
       statusEl.className = 'error';
       setProgress(0, 'Failed');
     }
