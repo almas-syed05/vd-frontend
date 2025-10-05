@@ -274,7 +274,39 @@
       return document.getElementById('status');
     }
 
-    function isSupportedUrl(u) {
+    // Extract and sanitize filename from Content-Disposition header
+    function extractFilename(disposition, quality) {
+      if (!disposition) return `video_${quality}.mp4`;
+      
+      // Try different patterns for filename extraction
+      const patterns = [
+        /filename\*=UTF-8''([^;]+)/,  // RFC 5987 encoded
+        /filename="([^"]+)"/,         // Quoted filename
+        /filename=([^;]+)/            // Unquoted filename
+      ];
+      
+      for (const pattern of patterns) {
+        const match = pattern.exec(disposition);
+        if (match) {
+          let filename = decodeURIComponent(match[1].trim());
+          
+          // Sanitize filename for safe download
+          filename = filename
+            .replace(/[<>:"/\\|?*]/g, '_')  // Replace invalid characters
+            .replace(/\s+/g, ' ')           // Normalize spaces
+            .trim();
+          
+          // Ensure it has an extension
+          if (!filename.match(/\.\w{2,4}$/)) {
+            filename += '.mp4';
+          }
+          
+          return filename;
+        }
+      }
+      
+      return `video_${quality}.mp4`;
+    }
       try {
         const parsed = new URL(u);
         const host = parsed.hostname.toLowerCase();
@@ -385,21 +417,20 @@
           statusEl.textContent = `Success with server ${i + 1} (${quality})!`;
           statusEl.className = 'success';
 
-          const disposition = res.headers.get('Content-Disposition') || 'video.mp4';
+          const disposition = res.headers.get('Content-Disposition') || '';
           const blob = await streamToBlobWithProgress(res);
           const blobUrl = URL.createObjectURL(blob);
 
           const a = document.createElement('a');
           a.href = blobUrl;
-          const match = /filename="?([^"]+)"?/.exec(disposition);
-          a.download = match ? match[1] : `video_${quality}.mp4`;
+          a.download = extractFilename(disposition, quality);
 
           document.body.appendChild(a);
           a.click();
           a.remove();
           URL.revokeObjectURL(blobUrl);
 
-          statusEl.textContent = `Download started (${quality})!`;
+          statusEl.textContent = `Download started: ${a.download}`;
           setProgress(100, 'Saved');
           return; // success
         } catch (e) {
