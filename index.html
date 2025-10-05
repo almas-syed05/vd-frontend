@@ -8,21 +8,23 @@
     body { font-family: system-ui, Arial; padding: 2rem; max-width: 800px; margin: auto; }
     input, button { padding: .6rem; font-size: 1rem; margin-bottom: .5rem; }
     #status { margin-top: 1rem; font-weight: bold; }
+    .hint { font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
   </style>
 </head>
 <body>
   <h1>Video Downloader</h1>
   <p>Paste a YouTube / Facebook URL you own or have permission to download.</p>
 
-  <input id="url" placeholder="https://..." style="width:70%"/>
+  <input id="url" placeholder="https://youtu.be/VIDEO_ID or https://www.youtube.com/watch?v=VIDEO_ID" style="width:70%" pattern="(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.*" title="Enter a valid YouTube URL (youtube.com or youtu.be)" required />
+  <div class="hint">Only YouTube URLs are supported.</div>
   <input id="title" placeholder="Optional filename" style="width:25%" />
   <br/>
   <button id="download">Download</button>
   <script>
     // Try multiple backend servers in order; stop on first success
     const BACKENDS = [
-      'https://vd-backend-f1vo.onrender.com',
       'https://vd-backend-production.up.railway.app/',
+      'https://vd-backend-f1vo.onrender.com',
       // Add more as you deploy them
     ];
     const API_KEY = (window.__API_KEY__ || 'testing123');
